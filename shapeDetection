@@ -1,0 +1,90 @@
+import cv2
+import numpy as np
+
+
+def nothing(x):
+    pass
+
+cap=cv2.VideoCapture(0)
+
+
+while True: 
+   success, img=cap.read()  #loading images from webcam.We create frame
+   imgHSV=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)#we convert it to HSV
+  
+  
+   
+    # Red color
+    #we define the ranges
+   low_red = np.array([161,155,84])
+   high_red = np.array([179,255,255])
+   
+   # Blue color
+   low_blue = np.array([94,80,2], np.uint8)
+   high_blue = np.array([126,255,255], np.uint8)
+   
+   #we create the mask 
+   red_mask = cv2.inRange(imgHSV, low_red, high_red)
+   kernel=np.ones((5,5),np.uint8) #used to remove the noise to get cleaner vision
+   red_mask=cv2.erode(red_mask,kernel)
+   
+   blue_mask = cv2.inRange(imgHSV, low_blue, high_blue)
+   kernel=np.ones((5,5),np.uint8) #used to remove the noise to get cleaner vision
+   blue_mask=cv2.erode(blue_mask,kernel)
+
+   
+   
+  #After mask, we need to find contours.    
+  #red color detection
+   contours, hierarchy =     cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) #THIS WILL FIND CONTOUR 
+   
+   font=cv2.FONT_HERSHEY_COMPLEX
+   for cnt in contours:
+       area=cv2.contourArea(cnt)
+       approx=cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True) #THIS METHOD APPROXIMATE POLYGONAL CURVE
+       x= approx.ravel()[0]
+       y= approx.ravel()[1]#DEFINING X AND Y POINTS OF SHAPE 
+    
+    
+       if area>300:
+            cv2.drawContours(img,[approx],0,(0,0,0),5)#TO DRAW CONTOUR
+        
+            if len(approx)==3: #TRIANGLE HAS 3 EDGES
+                cv2.putText(img,"Triangle",(x,y),font,1,(0,0,0))
+            elif len(approx)==4:#SQUARE HAS 4 EDGES
+                cv2.putText(img,"Square",(x,y),font,1,(0,0,0))
+    
+    
+    #blue color detection
+   contours, hierarchy =     cv2.findContours(blue_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) #THIS WILL FIND CONTOUR 
+   
+   font=cv2.FONT_HERSHEY_COMPLEX
+   for cnt in contours:
+       area=cv2.contourArea(cnt)
+       approx=cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True) #THIS METHOD APPROXIMATE POLYGONAL CURVE
+       x= approx.ravel()[0]
+       y= approx.ravel()[1]#DEFINING X AND Y POINTS OF SHAPE 
+    
+    
+       if area>300:
+            cv2.drawContours(img,[approx],0,(0,0,0),5)#TO DRAW CONTOUR
+        
+            if len(approx)==3: #TRIANGLE HAS 3 EDGES
+                cv2.putText(img,"Triangle",(x,y),font,1,(0,0,0))
+            elif len(approx)==4:#SQUARE HAS 4 EDGES
+                cv2.putText(img,"Square",(x,y),font,1,(0,0,0))
+    
+    
+   #we show the frame 
+   
+   cv2.imshow("Image",img)
+   cv2.imshow("Red Mask",red_mask)
+   cv2.imshow("Blue Mask",blue_mask)
+   
+   key= cv2.waitKey(1)
+   if key==27:
+      break
+              
+    
+cap.release()
+cv2.destroyAllWindows()
